@@ -66,12 +66,18 @@ exports.login = async (req, res, next) => {
         let user;
         if (role === 'technician') {
             user = await Technician.findOne({ email }).select('+password');
-        } else {
+        } else if (role === 'user' || role === 'admin') {
             user = await User.findOne({ email }).select('+password');
+        } else {
+            // Smart Auth: If no role is passed (like from Mobile App), check both
+            user = await User.findOne({ email }).select('+password');
+            if (!user) {
+                user = await Technician.findOne({ email }).select('+password');
+            }
         }
 
         if (!user) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return res.status(401).json({ success: false, message: 'Invalid credentials. Please check your email or registration status.' });
         }
 
         // Check if password matches

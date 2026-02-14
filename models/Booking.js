@@ -13,7 +13,7 @@ const bookingSchema = new mongoose.Schema({
     applianceType: {
         type: String,
         required: [true, 'Please select appliance type'],
-        enum: ['AC', 'Fridge', 'Washing Machine', 'TV', 'Microwave', 'General']
+        enum: ['AC', 'Fridge', 'Washing Machine', 'TV', 'Microwave', 'Microwave Oven', 'Refrigerator', 'Water Purifier', 'General']
     },
     serviceType: {
         type: String,
@@ -25,10 +25,8 @@ const bookingSchema = new mongoose.Schema({
         required: [true, 'Please describe the issue']
     },
     address: {
-        street: String,
-        city: String,
-        state: String,
-        zipCode: String
+        type: String,
+        required: [true, 'Please provide a service address']
     },
     scheduledDate: {
         type: Date,
