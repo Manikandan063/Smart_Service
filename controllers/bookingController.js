@@ -148,37 +148,35 @@ exports.updateBooking = async (req, res, next) => {
                 }
             }
 
-            // Handle work updates (Diagnosis, Cost, Completion)
-            if (booking.acceptanceStatus === 'Accepted') {
-                if (req.body.diagnosis) booking.diagnosis = req.body.diagnosis;
-                if (req.body.totalAmount) booking.totalAmount = req.body.totalAmount;
-                if (req.body.status) booking.status = req.body.status; // e.g., Completed
-                // If marking pending payment or paid
-                if (req.body.paymentStatus) booking.paymentStatus = req.body.paymentStatus;
+            // Handle work updates (Diagnosis, Cost, Findings, Photo, Completion)
+            if (booking.acceptanceStatus === 'Accepted' || req.body.acceptanceStatus === 'Accepted') {
+                const allowedFields = ['diagnosis', 'findings', 'photo', 'estimatedCost', 'totalAmount', 'status', 'paymentStatus', 'paymentMethod'];
+                allowedFields.forEach(field => {
+                    if (req.body[field] !== undefined) {
+                        booking[field] = req.body[field];
+                    }
+                });
             } else if (!req.body.acceptanceStatus) {
-                // If trying to update other things without having accepted
-                // Actually, if they are already accepted, acceptanceStatus might not be in the body.
-                // So we check stored status.
-                if (booking.acceptanceStatus !== 'Accepted') {
-                    return res.status(400).json({ success: false, message: 'You must accept the booking first' });
-                }
-                // If already accepted, allow updates
-                if (req.body.diagnosis) booking.diagnosis = req.body.diagnosis;
-                if (req.body.totalAmount) booking.totalAmount = req.body.totalAmount;
-                if (req.body.status) booking.status = req.body.status;
-                if (req.body.paymentStatus) booking.paymentStatus = req.body.paymentStatus;
+                return res.status(400).json({ success: false, message: 'You must accept the booking first' });
             }
         }
 
-        // 3. USER: Cancel only
+        // 3. USER: Cancel only, OR record payment after service
         if (req.user.role === 'user') {
             if (req.body.status === 'Cancelled') {
                 if (booking.status === 'Completed' || booking.status === 'In Progress') {
                     return res.status(400).json({ success: false, message: 'Cannot cancel active or completed booking' });
                 }
                 booking.status = 'Cancelled';
+            } else if (req.body.paymentStatus === 'Paid' || req.body.paymentMethod === 'Cash') {
+                // User settlement (Digital or Cash request)
+                if (req.body.paymentStatus) booking.paymentStatus = req.body.paymentStatus;
+                if (req.body.paymentMethod) booking.paymentMethod = req.body.paymentMethod;
+                if (req.body.cashCollectionRequested !== undefined) {
+                    booking.cashCollectionRequested = req.body.cashCollectionRequested;
+                }
             } else {
-                return res.status(401).json({ success: false, message: 'Users can only cancel bookings' });
+                return res.status(401).json({ success: false, message: 'Invalid update for User role' });
             }
         }
 

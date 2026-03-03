@@ -54,8 +54,29 @@ const bookingSchema = new mongoose.Schema({
         enum: ['Pending', 'Paid'],
         default: 'Pending'
     },
+    paymentMethod: {
+        type: String,
+        enum: ['Cash', 'GPay', 'Not Selection'],
+        default: 'Not Selection'
+    },
     totalAmount: {
         type: Number
+    },
+    estimatedCost: {
+        type: Number
+    },
+    findings: {
+        type: String // Detailed technician notes
+    },
+    photo: {
+        type: String // URL to photo proof
+    },
+    cashCollectionRequested: {
+        type: Boolean,
+        default: false
+    },
+    serviceImage: {
+        type: String // URL to image provided by technician (legacy)
     },
     createdAt: {
         type: Date,

@@ -82,3 +82,32 @@ exports.getIncomeDetails = async (req, res, next) => {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
+
+// @desc    Request withdrawal of earnings
+// @route   POST /api/technician/withdraw
+// @access  Private (Technician)
+exports.requestWithdrawal = async (req, res, next) => {
+    try {
+        const technician = await Technician.findById(req.user.id);
+
+        if (!technician) {
+            return res.status(404).json({ success: false, message: 'Technician not found' });
+        }
+
+        if (technician.earnings <= 0) {
+            return res.status(400).json({ success: false, message: 'No earnings available for withdrawal' });
+        }
+
+        // Reset earnings to 0 after payout request
+        // In a real system, you'd create a 'Payout' record here as well
+        technician.earnings = 0;
+        await technician.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Withdrawal request processed successfully'
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
