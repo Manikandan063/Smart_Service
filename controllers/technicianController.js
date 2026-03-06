@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Technician = require('../models/Technician');
 const Booking = require('../models/Booking');
 
@@ -6,10 +7,12 @@ const Booking = require('../models/Booking');
 // @access  Private (Technician)
 exports.getTechnicianDashboard = async (req, res, next) => {
     try {
-        const totalAssigned = await Booking.countDocuments({ technician: req.user.id });
-        const pending = await Booking.countDocuments({ technician: req.user.id, status: 'Assigned', acceptanceStatus: 'Pending' });
-        const inProgress = await Booking.countDocuments({ technician: req.user.id, status: 'In Progress' });
-        const completed = await Booking.countDocuments({ technician: req.user.id, status: 'Completed' });
+        const technicianId = req.user._id || req.user.id;
+
+        const totalAssigned = await Booking.countDocuments({ technician: technicianId });
+        const pending = await Booking.countDocuments({ technician: technicianId, status: 'Assigned', acceptanceStatus: 'Pending' });
+        const inProgress = await Booking.countDocuments({ technician: technicianId, status: 'In Progress' });
+        const completed = await Booking.countDocuments({ technician: technicianId, status: 'Completed' });
 
         // Calculate Monthly Earnings
         const today = new Date();
@@ -19,10 +22,7 @@ exports.getTechnicianDashboard = async (req, res, next) => {
         const monthlyEarningsResult = await Booking.aggregate([
             {
                 $match: {
-                    technician: req.user._id, // technician stores ObjectId or simple ID? Model says ObjectId.
-                    // But wait, booking.technician is an ObjectId.
-                    // IMPORTANT: aggregate match on ObjectId requires casting if using string. 
-                    // req.user._id is usually an ObjectId if coming from mongoose findById.
+                    technician: new mongoose.Types.ObjectId(technicianId.toString()),
                     status: 'Completed',
                     createdAt: { $gte: startOfMonth, $lte: endOfMonth }
                 }
