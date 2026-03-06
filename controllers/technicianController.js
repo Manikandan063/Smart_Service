@@ -89,27 +89,34 @@ exports.getIncomeDetails = async (req, res, next) => {
 // @access  Private (Technician)
 exports.requestWithdrawal = async (req, res, next) => {
     try {
-        const technician = await Technician.findById(req.user.id);
+        const technicianId = req.user.id || req.user._id;
+
+        // Fetch fresh copy to ensure accurate balance
+        const technician = await Technician.findById(technicianId);
 
         if (!technician) {
-            return res.status(404).json({ success: false, message: 'Technician not found' });
+            return res.status(404).json({ success: false, message: 'Technician profile not found' });
         }
 
-        if (technician.earnings <= 0) {
-            return res.status(400).json({ success: false, message: 'No earnings available for withdrawal' });
+        const amountToWithdraw = technician.earnings || 0;
+
+        if (amountToWithdraw <= 0) {
+            return res.status(400).json({ success: false, message: 'No earnings are available for withdrawal' });
         }
 
-        // Reset earnings to 0 after payout request
-        // In a real system, you'd create a 'Payout' record here as well
-        technician.earnings = 0;
-        await technician.save();
+        // Ideally, create a WithdrawalRecord here for tracking
+        // For now, we update the balance directly
+        await Technician.findByIdAndUpdate(technicianId, {
+            $set: { earnings: 0 }
+        });
 
         res.status(200).json({
             success: true,
-            message: 'Withdrawal request processed successfully'
+            amount: amountToWithdraw,
+            message: 'Withdrawal processed successfully. Your balance is now 0.'
         });
     } catch (err) {
         console.error('requestWithdrawal Error:', err);
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: 'Server error details: ' + (err.message || 'Unknown Error') });
     }
 };
