@@ -6,7 +6,22 @@ const Booking = require('../models/Booking');
 // @access  Private
 exports.getMessages = async (req, res) => {
     try {
-        const messages = await Message.find({ booking: req.params.bookingId })
+        const { bookingId } = req.params;
+
+        // Verify authorization (only User or Technician involved in the booking)
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'Booking not found' });
+        }
+
+        const isUser = booking.user.toString() === req.user.id.toString();
+        const isTech = booking.technician && booking.technician.toString() === req.user.id.toString();
+
+        if (!isUser && !isTech) {
+            return res.status(403).json({ success: false, message: 'Not authorized to view these messages' });
+        }
+
+        const messages = await Message.find({ booking: bookingId })
             .sort({ createdAt: 1 });
 
         res.status(200).json({
@@ -14,6 +29,7 @@ exports.getMessages = async (req, res) => {
             data: messages
         });
     } catch (error) {
+        console.error('getMessages Error:', error);
         res.status(500).json({
             success: false,
             message: 'Server Error'
