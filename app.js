@@ -10,6 +10,7 @@ const bookings = require('./routes/bookingRoutes');
 const technicians = require('./routes/technicianRoutes');
 const admin = require('./routes/adminRoutes');
 const payments = require('./routes/paymentRoutes');
+const messages = require('./routes/messageRoutes');
 
 const app = express();
 
@@ -27,5 +28,6 @@ app.use('/api/bookings', bookings);
 app.use('/api/technician', technicians);
 app.use('/api/admin', admin);
 app.use('/api/payments', payments);
+app.use('/api/messages', messages);
 
 module.exports = app;
