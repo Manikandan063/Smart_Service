@@ -79,6 +79,7 @@ exports.getIncomeDetails = async (req, res, next) => {
             history: completedBookings
         });
     } catch (err) {
+        console.error('getIncomeDetails Error:', err);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -108,6 +109,7 @@ exports.requestWithdrawal = async (req, res, next) => {
             message: 'Withdrawal request processed successfully'
         });
     } catch (err) {
+        console.error('requestWithdrawal Error:', err);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
